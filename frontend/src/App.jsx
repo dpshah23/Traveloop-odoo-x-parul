@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import MainLayout from './layouts/MainLayout.jsx'
+import ProtectedRoute from './routes/ProtectedRoute.jsx'
 import Home from './pages/Home.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 import Trips from './pages/Trips.jsx'
 import NotFound from './pages/NotFound.jsx'
 
@@ -11,7 +13,10 @@ function App() {
       <Routes>
         <Route element={<MainLayout />}>
           <Route index element={<Home />} />
-          <Route path="trips" element={<Trips />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="trips" element={<Trips />} />
+          </Route>
           <Route path="home" element={<Navigate to="/" replace />} />
         </Route>
         <Route path="*" element={<NotFound />} />
