@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import { GridContainer, Card } from '../components/dashboard/Card'
 import { StatCard } from '../components/dashboard/StatCard'
 import { TripCard } from '../components/dashboard/TripCard'
 import { SectionHeader } from '../components/dashboard/SectionHeader'
+import apiClient from '../api/client'
 import {
   TrendingUp,
   Calendar,
@@ -20,81 +21,69 @@ import {
 
 export default function Dashboard() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(true)
-  const [stats, setStats] = useState([])
-  const [recentTrips, setRecentTrips] = useState([])
+  const [trips, setTrips] = useState([])
+  const [budgetEntries, setBudgetEntries] = useState([])
 
-  // Simulate API fetch
   useEffect(() => {
     const fetchData = async () => {
-      // Simulate network delay for skeleton loading state
-      await new Promise(resolve => setTimeout(resolve, 1500))
-
-      setStats([
-        {
-          icon: MapPin,
-          label: 'Completed Trips',
-          value: '12',
-          change: 15,
-          positive: true,
-        },
-        {
-          icon: Calendar,
-          label: 'Upcoming Trips',
-          value: '3',
-          change: 8,
-          positive: true,
-        },
-        {
-          icon: Wallet,
-          label: 'Total Budget Used',
-          value: '₹3,54,000',
-          change: 12,
-          positive: false,
-        },
-        {
-          icon: TrendingUp,
-          label: 'Avg. Trip Cost',
-          value: '₹86,500',
-          change: 5,
-          positive: false,
-        },
-      ])
-
-      setRecentTrips([
-        {
-          id: 1,
-          name: 'Paris Getaway',
-          dates: 'May 1 - May 8, 2026',
-          budget: '₹2,00,000',
-          status: 'Completed',
-          image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800&auto=format&fit=crop',
-        },
-        {
-          id: 2,
-          name: 'Tokyo Adventure',
-          dates: 'Jun 15 - Jun 28, 2026',
-          budget: '₹2,65,000',
-          status: 'Upcoming',
-          image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=800&auto=format&fit=crop',
-        },
-        {
-          id: 3,
-          name: 'Bali Retreat',
-          dates: 'Jul 5 - Jul 20, 2026',
-          budget: '₹1,50,000',
-          status: 'Planning',
-          image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=800&auto=format&fit=crop',
-        },
-      ])
-      
-      setIsLoading(false)
+      try {
+        const [tripsRes, budgetRes] = await Promise.all([
+          apiClient.get('/api/trips/'),
+          apiClient.get('/api/budget/')
+        ])
+        setTrips(Array.isArray(tripsRes.data) ? tripsRes.data : (tripsRes.data?.results || []))
+        setBudgetEntries(Array.isArray(budgetRes.data) ? budgetRes.data : (budgetRes.data?.results || []))
+      } catch (error) {
+        console.error("Error fetching dashboard data", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
-
     fetchData()
   }, [])
 
-  const emptyState = recentTrips.length === 0 && !isLoading
+  const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0)
+
+  const completedTrips = trips.filter(t => t.status === 'COMPLETED').length
+  const upcomingTrips = trips.filter(t => t.status !== 'COMPLETED').length
+  const totalBudgetUsed = budgetEntries.reduce((sum, entry) => sum + parseFloat(entry.amount), 0)
+  const avgTripCost = trips.length > 0 ? (totalBudgetUsed / trips.length) : 0
+
+  const stats = [
+    {
+      icon: MapPin,
+      label: 'Completed Trips',
+      value: completedTrips.toString(),
+      change: 0,
+      positive: true,
+    },
+    {
+      icon: Calendar,
+      label: 'Upcoming Trips',
+      value: upcomingTrips.toString(),
+      change: 0,
+      positive: true,
+    },
+    {
+      icon: Wallet,
+      label: 'Total Expenses',
+      value: formatCurrency(totalBudgetUsed),
+      change: 0,
+      positive: false,
+    },
+    {
+      icon: TrendingUp,
+      label: 'Avg. Trip Cost',
+      value: formatCurrency(avgTripCost),
+      change: 0,
+      positive: false,
+    },
+  ]
+
+  const recentTrips = [...trips].sort((a,b) => new Date(b.start_date) - new Date(a.start_date)).slice(0, 3)
+  const emptyState = trips.length === 0 && !isLoading
 
   return (
     <DashboardLayout title="Dashboard">
@@ -135,16 +124,16 @@ export default function Dashboard() {
         />
 
         {emptyState ? (
-          <Card className="flex flex-col items-center justify-center py-16 text-center border-dashed border-2 border-slate-700 bg-slate-800/20">
+          <Card className="flex flex-col items-center justify-center py-16 text-center border-dashed border-2 border-slate-700 bg-slate-900/50">
             <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6">
               <Plane className="w-10 h-10 text-slate-500" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">No trips planned yet</h3>
-            <p className="text-slate-400 max-w-sm mb-6">
-              You haven&apos;t created any trips. Start planning your next adventure today!
+            <h3 className="text-2xl font-bold text-white mb-2">No trips planned yet</h3>
+            <p className="text-slate-400 max-w-sm mb-8 text-lg">
+              You haven't created any trips. Start planning your next adventure today!
             </p>
-            <Link to="/trips/new" className="flex items-center gap-2 px-6 py-3 bg-teal-500 hover:bg-teal-400 text-slate-900 rounded-lg font-bold transition-all shadow-lg hover:shadow-teal-500/25 active:scale-95">
-              <Plus className="w-5 h-5" />
+            <Link to="/trips/new" className="flex items-center gap-2 px-8 py-4 bg-teal-500 hover:bg-teal-400 text-slate-900 rounded-xl font-bold transition-all shadow-lg hover:shadow-teal-500/25 active:scale-95 text-lg">
+              <Plus className="w-6 h-6" />
               Plan Your First Trip
             </Link>
           </Card>
@@ -198,7 +187,7 @@ export default function Dashboard() {
       <div>
         <SectionHeader title="Quick Tools" />
         <GridContainer columns={3}>
-          <Card className="flex items-center gap-4 cursor-pointer hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+          <Card onClick={() => navigate('/trips/new')} className="flex items-center gap-4 cursor-pointer border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
             <div className="p-3 bg-gradient-to-br from-teal-400/10 to-teal-600/10 rounded-xl group-hover:scale-110 transition-transform">
               <Activity className="w-6 h-6 text-teal-400" />
             </div>
@@ -208,7 +197,7 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card className="flex items-center gap-4 cursor-pointer hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+          <Card onClick={() => navigate('/budget')} className="flex items-center gap-4 cursor-pointer border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
             <div className="p-3 bg-gradient-to-br from-teal-400/10 to-teal-600/10 rounded-xl group-hover:scale-110 transition-transform">
               <Wallet className="w-6 h-6 text-teal-400" />
             </div>
@@ -218,7 +207,7 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card className="flex items-center gap-4 cursor-pointer hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
+          <Card className="flex items-center gap-4 cursor-pointer border-slate-800 hover:border-teal-500/50 hover:bg-slate-800/80 transition-all group">
             <div className="p-3 bg-gradient-to-br from-teal-400/10 to-teal-600/10 rounded-xl group-hover:scale-110 transition-transform">
               <Globe className="w-6 h-6 text-teal-400" />
             </div>
