@@ -6,7 +6,11 @@ import ProtectedRoute from './routes/ProtectedRoute.jsx'
 import PublicRoute from './routes/PublicRoute.jsx'
 import Home from './pages/Home.jsx'
 import Dashboard from './pages/Dashboard.jsx'
-import Trips from './pages/Trips.jsx'
+import TripsPage from './pages/TripsPage.jsx'
+import BudgetPage from './pages/BudgetPage.jsx'
+import PackingPage from './pages/PackingPage.jsx'
+import NotesPage from './pages/NotesPage.jsx'
+import SettingsPage from './pages/SettingsPage.jsx'
 import NotFound from './pages/NotFound.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import SignupPage from './pages/auth/SignupPage.jsx'
@@ -19,7 +23,11 @@ function App() {
           <Route index element={<Home />} />
           <Route element={<ProtectedRoute />}>
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="trips" element={<Trips />} />
+             <Route path="trips" element={<TripsPage />} />
+             <Route path="budget" element={<BudgetPage />} />
+             <Route path="packing" element={<PackingPage />} />
+             <Route path="notes" element={<NotesPage />} />
+             <Route path="settings" element={<SettingsPage />} />
           </Route>
           <Route path="home" element={<Navigate to="/" replace />} />
         </Route>
