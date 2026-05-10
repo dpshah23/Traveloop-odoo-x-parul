@@ -19,16 +19,26 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from accounts.views import RegisterView, UserViewSet, CustomTokenObtainPairView
+from trips.views import TripViewSet, TripStopViewSet, BudgetViewSet, PublicTripShareView
+from activities.views import TripActivityViewSet
 
 
 # Create router and register viewsets
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'auth/register', RegisterView, basename='register')
+router.register(r'trips', TripViewSet, basename='trips')
+router.register(r'stops', TripStopViewSet, basename='stops')
+router.register(r'activities', TripActivityViewSet, basename='activities')
+router.register(r'budget', BudgetViewSet, basename='budget')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/trips/<uuid:trip_pk>/stops/', TripStopViewSet.as_view({'get': 'list', 'post': 'create'}), name='trip-stops'),
+    path('api/stops/<uuid:stop_pk>/activities/', TripActivityViewSet.as_view({'get': 'list', 'post': 'create'}), name='stop-activities'),
+    path('api/trips/<uuid:trip_pk>/budget/', BudgetViewSet.as_view({'get': 'list', 'post': 'create'}), name='trip-budget'),
+    path('api/share/<slug:slug>/', PublicTripShareView.as_view(), name='public-trip-share'),
 ]

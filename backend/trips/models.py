@@ -77,7 +77,7 @@ class TripStop(models.Model):
     position = models.PositiveSmallIntegerField()  # 0-indexed position within trip
     start_date = models.DateField()
     end_date = models.DateField()
-    notes = models.TextField(null=True, blank=True)
+    stop_notes = models.TextField(null=True, blank=True)
     daily_budget = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -101,4 +101,74 @@ class TripStop(models.Model):
     
     def __str__(self):
         return f"{self.city.name} ({self.trip.title})"
+
+
+class PackingItem(models.Model):
+    """Packing list item associated with a trip (or specific stop).
+
+    Packing items live under a Trip and are used to build a checklist for
+    travellers. Keeping them attached to trips (not a separate app) keeps
+    the domain model cohesive.
+    """
+
+    CATEGORY_CHOICES = [
+        ('CLOTHING', 'Clothing'),
+        ('DOCUMENTS', 'Documents'),
+        ('ELECTRONICS', 'Electronics'),
+        ('HEALTH', 'Health & Toiletries'),
+        ('OTHER', 'Other'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name='packing_items')
+    trip_stop = models.ForeignKey(TripStop, on_delete=models.SET_NULL, null=True, blank=True, related_name='packing_items')
+    name = models.CharField(max_length=200)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='OTHER')
+    quantity = models.PositiveSmallIntegerField(default=1)
+    is_packed = models.BooleanField(default=False)
+    is_essential = models.BooleanField(default=False)
+    notes = models.TextField(null=True, blank=True)
+    position = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'packing_items'
+        indexes = [
+            models.Index(fields=['trip', 'is_packed']),
+            models.Index(fields=['trip', 'category']),
+            models.Index(fields=['trip', 'position']),
+        ]
+        ordering = ['position', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.trip.title})"
+
+
+class TripNote(models.Model):
+    """Notes or journal entries attached to a Trip or a TripStop.
+
+    Notes are stored in the trips domain so they are versioned and backed by
+    the owner/permission model of the Trip.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name='notes')
+    trip_stop = models.ForeignKey(TripStop, on_delete=models.SET_NULL, null=True, blank=True, related_name='notes')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    is_public = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'trip_notes'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['trip', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} - {self.trip.title}"
 
