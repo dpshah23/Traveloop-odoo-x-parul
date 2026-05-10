@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, MapPinned, Wallet, WandSparkles } from 'lucide-react'
+import { ArrowRight, CalendarDays, LockKeyhole, MapPinned, Wallet, WandSparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const highlights = [
@@ -16,6 +16,11 @@ const highlights = [
     icon: Wallet,
     title: 'Budget visibility',
     description: 'Track estimates and actual spend so every trip stays grounded in reality.',
+  },
+  {
+    icon: LockKeyhole,
+    title: 'Protected trip area',
+    description: 'Routes for dashboards and trips are guarded behind JWT auth.',
   },
 ]
 
@@ -40,18 +45,20 @@ export default function Home() {
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
-              to="/trips"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-teal-400 px-6 py-3 font-semibold text-slate-950 transition hover:bg-teal-300"
+              to="/auth/signup"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-teal-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-teal-300 sm:w-auto"
             >
-              Open trip planner
+              Create account
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <a
-              href="#highlights"
-              className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-6 py-3 font-semibold text-slate-100 transition hover:bg-white/10"
+            <Link
+              to="/auth/login"
+              className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:bg-white/10 sm:w-auto"
             >
-              Explore features
-            </a>
+              <span>
+                Sign in
+              </span>
+            </Link>
           </div>
         </div>
 
@@ -95,6 +102,14 @@ export default function Home() {
             </article>
           )
         })}
+      </div>
+
+      <div className="mt-10 flex flex-wrap items-center gap-3 text-sm text-slate-400">
+        <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">Login</span>
+        <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">Signup</span>
+        <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">JWT</span>
+        <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">Protected routes</span>
+        <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2">Tailwind UI</span>
       </div>
     </section>
   )

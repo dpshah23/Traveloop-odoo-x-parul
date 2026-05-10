@@ -1,20 +1,19 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.js'
 
-export default function ProtectedRoute() {
+export default function PublicRoute() {
   const { isAuthenticated, isLoading } = useAuth()
-  const location = useLocation()
 
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-4 text-slate-300">
-        Loading secure session...
+        Loading...
       </div>
     )
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace state={{ from: location }} />
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />
   }
 
   return <Outlet />
