@@ -5,7 +5,7 @@ import Input from '../components/ui/Input'
 import Textarea from '../components/ui/Textarea'
 import Switch from '../components/ui/Switch'
 import Button from '../components/ui/Button'
-import { Map, Calendar, Image as ImageIcon, DollarSign, Loader2, Sparkles, AlertCircle } from 'lucide-react'
+import { Map, Calendar, Image as ImageIcon, IndianRupee, Loader2, Sparkles, AlertCircle } from 'lucide-react'
 import { Card } from '../components/dashboard/Card'
 
 export default function CreateTripPage() {
@@ -128,7 +128,7 @@ export default function CreateTripPage() {
                       type="number"
                       label="Budget (Optional)"
                       name="budget"
-                      placeholder="e.g. 2500"
+                      placeholder="e.g. 200000"
                       value={formData.budget}
                       onChange={handleChange}
                     />
@@ -185,7 +185,7 @@ export default function CreateTripPage() {
                              {formData.startDate ? new Date(formData.startDate).toLocaleDateString() : 'Start'}
                            </span>
                            <span className="flex items-center gap-1 font-medium bg-slate-900/50 px-2 py-1 rounded-lg backdrop-blur-sm border border-white/5">
-                             <DollarSign className="w-4 h-4 text-teal-400"/> 
+                             <IndianRupee className="w-4 h-4 text-teal-400"/> 
                              {formData.budget || 'Budget'}
                            </span>
                         </div>

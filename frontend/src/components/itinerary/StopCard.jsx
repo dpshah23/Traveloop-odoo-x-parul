@@ -50,7 +50,7 @@ export default function StopCard({ stop, onUpdateStop, index }) {
                 {stop.startDate} to {stop.endDate}
               </span>
               <span className="hidden sm:inline">•</span>
-              <span className="font-medium text-teal-400">${totalBudget.toFixed(2)} Total</span>
+              <span className="font-medium text-teal-400">₹{totalBudget.toFixed(2)} Total</span>
             </div>
           </div>
         </div>

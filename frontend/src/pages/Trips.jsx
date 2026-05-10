@@ -1,29 +1,29 @@
-import { CheckCircle2, CircleDashed, Compass, DollarSign, ListTodo } from 'lucide-react'
+import { CheckCircle2, CircleDashed, Compass, IndianRupee, ListTodo } from 'lucide-react'
 
 const trips = [
   {
     name: 'Lisbon Summer Escape',
     status: 'Planning',
-    budget: '$2,450',
+    budget: '₹2,03,000',
     dates: 'Aug 08 - Aug 14',
   },
   {
     name: 'Bangkok Food Trail',
     status: 'Confirmed',
-    budget: '$1,720',
+    budget: '₹1,43,000',
     dates: 'Oct 02 - Oct 09',
   },
   {
     name: 'Swiss Alpine Circuit',
     status: 'Draft',
-    budget: '$4,800',
+    budget: '₹4,00,000',
     dates: 'Jan 11 - Jan 20',
   },
 ]
 
 const stats = [
   { label: 'Trips planned', value: '12', icon: Compass },
-  { label: 'Budget tracked', value: '$18.4K', icon: DollarSign },
+  { label: 'Budget tracked', value: '₹15.3L', icon: IndianRupee },
   { label: 'Tasks completed', value: '84%', icon: ListTodo },
 ]
 

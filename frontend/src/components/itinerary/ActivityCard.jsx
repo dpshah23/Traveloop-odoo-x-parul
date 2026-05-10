@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, Clock, DollarSign, MapPin, Utensils, Train, Home, Activity as ActivityIcon } from 'lucide-react'
+import { CheckCircle2, Circle, Clock, IndianRupee, MapPin, Utensils, Train, Home, Activity as ActivityIcon } from 'lucide-react'
 import { cn } from '../../utils/cn'
 
 const categoryIcons = {
@@ -59,7 +59,7 @@ export default function ActivityCard({ activity, onToggle }) {
           
           <div className="text-right shrink-0">
             <span className="flex items-center text-slate-300 font-semibold bg-slate-900/50 px-2 py-1 rounded-lg">
-              <DollarSign className="w-3.5 h-3.5 text-teal-400 mr-0.5" />
+              <IndianRupee className="w-3.5 h-3.5 text-teal-400 mr-0.5" />
               {activity.cost > 0 ? activity.cost.toFixed(2) : 'Free'}
             </span>
           </div>

@@ -68,7 +68,7 @@ export default function AddActivityModal({ isOpen, onClose, onAdd }) {
               className="[&::-webkit-calendar-picker-indicator]:filter-invert"
             />
             <Input 
-              label="Cost ($)" 
+              label="Cost (₹)" 
               type="number" 
               min="0"
               step="0.01"

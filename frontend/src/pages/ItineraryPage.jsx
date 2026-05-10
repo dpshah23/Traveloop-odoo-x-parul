@@ -54,7 +54,7 @@ export default function ItineraryPage() {
           
           <div className="bg-slate-900 p-4 rounded-2xl border border-slate-700/50 text-right sm:min-w-[200px]">
              <p className="text-sm font-medium text-slate-400 mb-1">Total Estimated Cost</p>
-             <p className="text-3xl font-bold text-teal-400">${grandTotal.toFixed(2)}</p>
+             <p className="text-3xl font-bold text-teal-400">₹{grandTotal.toFixed(2)}</p>
           </div>
         </div>
 
