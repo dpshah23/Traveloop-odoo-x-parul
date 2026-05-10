@@ -1,5 +1,6 @@
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { Card, GridContainer, StatCard } from '../components/dashboard/Card'
+import { Card, GridContainer } from '../components/dashboard/Card'
+import { StatCard } from '../components/dashboard/StatCard'
 import { Wallet, TrendingDown, TrendingUp } from 'lucide-react'
 
 export default function BudgetPage() {

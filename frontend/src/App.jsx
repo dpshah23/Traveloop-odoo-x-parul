@@ -7,6 +7,7 @@ import PublicRoute from './routes/PublicRoute.jsx'
 import Home from './pages/Home.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import TripsPage from './pages/TripsPage.jsx'
+import CreateTripPage from './pages/CreateTripPage.jsx'
 import BudgetPage from './pages/BudgetPage.jsx'
 import PackingPage from './pages/PackingPage.jsx'
 import NotesPage from './pages/NotesPage.jsx'
@@ -24,6 +25,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="dashboard" element={<Dashboard />} />
              <Route path="trips" element={<TripsPage />} />
+             <Route path="trips/new" element={<CreateTripPage />} />
              <Route path="budget" element={<BudgetPage />} />
              <Route path="packing" element={<PackingPage />} />
              <Route path="notes" element={<NotesPage />} />
