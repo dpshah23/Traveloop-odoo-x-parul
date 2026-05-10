@@ -11,12 +11,14 @@ import {
   ChevronDown,
   LogOut,
   X,
+  Calendar,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
 const SIDEBAR_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/trips', label: 'My Trips', icon: MapPin },
+  { href: '/itinerary', label: 'Itinerary', icon: Calendar },
   { href: '/budget', label: 'Budget', icon: DollarSign },
   { href: '/packing', label: 'Packing', icon: Backpack },
   { href: '/notes', label: 'Notes', icon: BookOpen },
