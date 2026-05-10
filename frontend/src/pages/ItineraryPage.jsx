@@ -19,6 +19,18 @@ export default function ItineraryPage() {
   const [newStop, setNewStop] = useState({ city: '', startDate: '', endDate: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const getCityName = (value) => value.split(',')[0].trim()
+
+  const resolveCityId = async (cityInput) => {
+    const cityName = getCityName(cityInput)
+    const response = await apiClient.get('/api/cities/', {
+      params: { search: cityName },
+    })
+    const cities = Array.isArray(response.data) ? response.data : (response.data?.results || [])
+    const exactMatch = cities.find((city) => city.name.toLowerCase() === cityName.toLowerCase())
+    return exactMatch || cities[0] || null
+  }
+
   useEffect(() => {
     const fetchTripData = async () => {
       try {
@@ -65,46 +77,46 @@ export default function ItineraryPage() {
   const handleAddStop = async (e) => {
     e.preventDefault()
     if (!newStop.city || !newStop.startDate || !newStop.endDate) return
+
+    if (trip?.start_date && newStop.startDate < trip.start_date) {
+      toast.error(`Stop start date must be on or after ${trip.start_date}.`)
+      return
+    }
+
+    if (trip?.end_date && newStop.endDate > trip.end_date) {
+      toast.error(`Stop end date must be on or before ${trip.end_date}.`)
+      return
+    }
+
+    if (newStop.endDate < newStop.startDate) {
+      toast.error('Stop end date must be after the start date.')
+      return
+    }
+
     setIsSubmitting(true)
     
     try {
-      // Create city if it doesn't exist? The backend expects `city` ID, but we only have string.
-      // Wait, if CitySearchInput gives us a string, does the backend accept it?
-      // In a real app, you'd send city_id. For now, let's assume backend requires city_id and we might fail if we just send string. 
-      // Assuming CitySearchInput gives city object or we just mock the ID for now.
-      // Actually, since this is dynamic, let's see how `TripStopSerializer` expects `city`.
-      // The backend expects `city` as PK. 
-      // If we don't have city API integration yet, we might get a 400 Bad Request.
-      // The user said "if api is not created then create and then configure dynamically all things".
-      // But creating a city endpoint is a bit complex right now. 
-      // Let's just create the stop if the API allows, else fallback gracefully.
-      
+      const city = await resolveCityId(newStop.city)
+      if (!city) {
+        toast.error('City not found. Try a known city from the suggestions.')
+        return
+      }
+
       const res = await apiClient.post(`/api/trips/${id}/stops/`, {
         trip: id,
-        city: 1, // hardcoded city ID for now to prevent crash if no city search endpoint is fully implemented
+        city_id: city.id,
         start_date: newStop.startDate,
         end_date: newStop.endDate,
-        position: stops.length
       })
       
-      // Merge with city string for UI display
-      const savedStop = { ...res.data, city: { name: newStop.city }, activities: [] }
+      const savedStop = { ...res.data, activities: res.data.activities || [] }
       setStops([...stops, savedStop])
       setNewStop({ city: '', startDate: '', endDate: '' })
       setIsAddingStop(false)
       toast.success('Destination added!')
     } catch (err) {
-      // Fallback for demonstration if API fails due to foreign key constraints
-      console.warn("API Add Stop failed, mocking in state for demo", err)
-      setStops([...stops, { 
-        id: Date.now().toString(), 
-        city: { name: newStop.city }, 
-        start_date: newStop.startDate, 
-        end_date: newStop.endDate, 
-        activities: [] 
-      }])
-      setNewStop({ city: '', startDate: '', endDate: '' })
-      setIsAddingStop(false)
+      console.warn('API Add Stop failed', err)
+      toast.error('Failed to add destination.')
     } finally {
       setIsSubmitting(false)
     }
@@ -195,6 +207,8 @@ export default function ItineraryPage() {
                   required 
                   value={newStop.startDate}
                   onChange={e => setNewStop({...newStop, startDate: e.target.value})}
+                  min={trip?.start_date}
+                  max={trip?.end_date}
                   className="[&::-webkit-calendar-picker-indicator]:filter-invert"
                 />
               </div>
@@ -205,6 +219,8 @@ export default function ItineraryPage() {
                   required 
                   value={newStop.endDate}
                   onChange={e => setNewStop({...newStop, endDate: e.target.value})}
+                  min={trip?.start_date}
+                  max={trip?.end_date}
                   className="[&::-webkit-calendar-picker-indicator]:filter-invert"
                 />
               </div>

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from .models import Trip, TripStop, PackingItem, TripNote
-from activities.models import TripActivity
+from cities.serializers import CitySerializer
 from budget.models import BudgetEntry
 from core.constants import TRIP_STATUS_CHOICES
 from .services import normalize_stop_positions
@@ -12,12 +12,14 @@ User = get_user_model()
 
 
 class TripStopSerializer(serializers.ModelSerializer):
-    activities = TripActivitySerializer(many=True, read_only=True)
+    city = CitySerializer(read_only=True)
+    city_id = serializers.PrimaryKeyRelatedField(source='city', queryset=TripStop._meta.get_field('city').remote_field.model.objects.all(), write_only=True)
+    activities = serializers.SerializerMethodField()
 
     class Meta:
         model = TripStop
-        fields = ('id', 'trip', 'city', 'position', 'start_date', 'end_date', 'stop_notes', 'daily_budget', 'activities')
-        read_only_fields = ('id', 'trip')
+        fields = ('id', 'trip', 'city', 'city_id', 'position', 'start_date', 'end_date', 'stop_notes', 'daily_budget', 'activities')
+        read_only_fields = ('id', 'trip', 'position')
 
     def validate(self, attrs):
         trip = self.context.get('trip') or (attrs.get('trip') if attrs.get('trip') else None)
@@ -35,6 +37,11 @@ class TripStopSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def get_activities(self, obj):
+        from activities.serializers import TripActivitySerializer
+        qs = obj.activities.all()
+        return TripActivitySerializer(qs, many=True, context=self.context).data
+
 
 class PackingItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,25 +55,6 @@ class TripNoteSerializer(serializers.ModelSerializer):
         model = TripNote
         fields = ('id', 'trip', 'trip_stop', 'title', 'content', 'is_public', 'created_by', 'created_at')
         read_only_fields = ('id', 'created_by', 'created_at')
-
-
-class TripActivitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TripActivity
-        fields = ('id', 'trip_stop', 'title', 'category', 'description', 'date', 'start_time', 'end_time', 'cost', 'currency', 'is_completed', 'position')
-        read_only_fields = ('id',)
-
-    def validate(self, attrs):
-        trip_stop = attrs.get('trip_stop') or self.context.get('trip_stop')
-        date = attrs.get('date')
-        cost = attrs.get('cost')
-
-        if date and trip_stop and (date < trip_stop.start_date or date > trip_stop.end_date):
-            raise serializers.ValidationError({'date': 'Activity date must be within stop date range.'})
-        if cost is not None and cost < 0:
-            raise serializers.ValidationError({'cost': 'Cost must be 0 or greater.'})
-
-        return attrs
 
 
 class BudgetEntrySerializer(serializers.ModelSerializer):
@@ -101,8 +89,5 @@ class TripDetailSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        request = self.context.get('request')
-        user = request.user if request else None
         with transaction.atomic():
-            trip = Trip.objects.create(owner=user, **validated_data)
-        return trip
+            return Trip.objects.create(**validated_data)

@@ -4,11 +4,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from django.db.models import Max
 
 from .models import Trip, TripStop, PackingItem, TripNote
 from budget.models import BudgetEntry
 from .serializers import (
-    TripListSerializer, TripDetailSerializer, TripStopSerializer, BudgetEntrySerializer
+    TripListSerializer, TripDetailSerializer, TripStopSerializer, BudgetEntrySerializer, PackingItemSerializer
 )
 from .permissions import IsTripOwner
 from .services import normalize_stop_positions, aggregate_budget
@@ -69,7 +70,8 @@ class TripStopViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         trip_id = self.kwargs.get('trip_pk') or self.request.data.get('trip')
         trip = get_object_or_404(Trip, pk=trip_id, owner=self.request.user)
-        serializer.save(trip=trip)
+        next_position = (trip.stops.aggregate(max_position=Max('position'))['max_position'] or -1) + 1
+        serializer.save(trip=trip, position=next_position)
         normalize_stop_positions(trip)
 
 
@@ -97,6 +99,27 @@ class BudgetViewSet(viewsets.ModelViewSet):
         serializer.save(trip=trip)
 
 
+class PackingItemViewSet(viewsets.ModelViewSet):
+    serializer_class = PackingItemSerializer
+    permission_classes = [IsAuthenticated, IsTripOwner]
+
+    def get_queryset(self):
+        trip_id = self.kwargs.get('trip_pk') or self.request.query_params.get('trip')
+        qs = PackingItem.objects.select_related('trip', 'trip_stop')
+        if trip_id:
+            qs = qs.filter(trip_id=trip_id)
+        return qs.filter(trip__owner=self.request.user)
+
+    def perform_create(self, serializer):
+        trip_id = self.kwargs.get('trip_pk') or self.request.data.get('trip')
+        trip = get_object_or_404(Trip, pk=trip_id, owner=self.request.user)
+        trip_stop_id = self.request.data.get('trip_stop') or self.request.data.get('trip_stop_id')
+        trip_stop = None
+        if trip_stop_id:
+            trip_stop = get_object_or_404(TripStop, pk=trip_stop_id, trip=trip)
+        serializer.save(trip=trip, trip_stop=trip_stop)
+
+
 class PublicTripShareView(APIView):
     permission_classes = [AllowAny]
 
@@ -107,6 +130,3 @@ class PublicTripShareView(APIView):
             is_public=True,
         )
         return Response(TripDetailSerializer(trip, context={'request': request}).data)
-from django.shortcuts import render
-
-# Create your views here.

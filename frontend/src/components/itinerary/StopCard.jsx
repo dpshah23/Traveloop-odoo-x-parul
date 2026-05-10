@@ -7,23 +7,27 @@ export default function StopCard({ stop, onUpdateStop, index }) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const totalBudget = stop.activities.reduce((sum, act) => sum + parseFloat(act.cost || 0), 0)
+  const stopCity = typeof stop.city === 'string' ? stop.city : stop.city?.name || stop.city?.country ? `${stop.city.name}, ${stop.city.country}` : ''
+  const startDate = stop.startDate || stop.start_date || ''
+  const endDate = stop.endDate || stop.end_date || ''
+  const activities = stop.activities || []
+  const totalBudget = activities.reduce((sum, act) => sum + parseFloat(act.cost || 0), 0)
 
   const handleAddActivity = (activity) => {
     onUpdateStop(stop.id, {
       ...stop,
-      activities: [...stop.activities, activity]
+      activities: [...activities, activity]
     })
   }
 
   const handleToggleActivity = async (activityId) => {
-    const activityToToggle = stop.activities.find(act => act.id === activityId)
+    const activityToToggle = activities.find(act => act.id === activityId)
     if (!activityToToggle) return
 
     // Optimistic update
     onUpdateStop(stop.id, {
       ...stop,
-      activities: stop.activities.map(act => 
+      activities: activities.map(act => 
         act.id === activityId ? { ...act, is_completed: !act.is_completed, completed: !act.completed } : act
       )
     })
@@ -63,12 +67,12 @@ export default function StopCard({ stop, onUpdateStop, index }) {
           <div>
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
               <MapPin className="w-5 h-5 text-teal-400 hidden sm:block" />
-              {stop.city}
+              {stopCity}
             </h3>
             <div className="flex items-center gap-3 mt-1 text-sm text-slate-400">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
-                {stop.startDate} to {stop.endDate}
+                {startDate} to {endDate}
               </span>
               <span className="hidden sm:inline">•</span>
               <span className="font-medium text-teal-400">₹{totalBudget.toFixed(2)} Total</span>
@@ -104,13 +108,13 @@ export default function StopCard({ stop, onUpdateStop, index }) {
           </div>
 
           <div className="space-y-3">
-            {stop.activities.length === 0 ? (
+            {activities.length === 0 ? (
               <div className="text-center py-8 text-slate-500 text-sm border-2 border-dashed border-slate-800 rounded-xl">
                 No activities planned yet.
               </div>
             ) : (
               // Sort by time
-              [...stop.activities].sort((a, b) => (a.start_time || a.time || '').localeCompare(b.start_time || b.time || '')).map((activity) => (
+              [...activities].sort((a, b) => (a.start_time || a.time || '').localeCompare(b.start_time || b.time || '')).map((activity) => (
                 <ActivityCard 
                   key={activity.id} 
                   activity={activity} 
