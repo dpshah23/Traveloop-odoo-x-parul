@@ -20,11 +20,12 @@ const categoryColors = {
 export default function ActivityCard({ activity, onToggle }) {
   const Icon = categoryIcons[activity.category] || ActivityIcon
   const colorClass = categoryColors[activity.category] || categoryColors.Activity
+  const isCompleted = activity.is_completed || activity.completed;
 
   return (
     <div className={cn(
       "group flex items-center gap-4 p-4 rounded-xl border transition-all duration-300",
-      activity.completed 
+      isCompleted 
         ? "bg-slate-800/20 border-slate-700/30 opacity-60" 
         : "bg-slate-800 border-slate-700 hover:border-slate-600 hover:shadow-lg hover:shadow-black/20"
     )}>
@@ -32,7 +33,7 @@ export default function ActivityCard({ activity, onToggle }) {
         onClick={() => onToggle(activity.id)} 
         className="shrink-0 text-slate-400 hover:text-teal-400 transition-colors focus:outline-none"
       >
-        {activity.completed ? (
+        {isCompleted ? (
           <CheckCircle2 className="w-6 h-6 text-teal-500" />
         ) : (
           <Circle className="w-6 h-6" />
@@ -42,7 +43,7 @@ export default function ActivityCard({ activity, onToggle }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h4 className={cn("text-base font-semibold transition-colors", activity.completed ? "text-slate-400 line-through" : "text-white")}>
+            <h4 className={cn("text-base font-semibold transition-colors", isCompleted ? "text-slate-400 line-through" : "text-white")}>
               {activity.title}
             </h4>
             <div className="flex items-center gap-4 mt-1.5 text-xs font-medium">
@@ -52,7 +53,7 @@ export default function ActivityCard({ activity, onToggle }) {
               </span>
               <span className="flex items-center gap-1 text-slate-400">
                 <Clock className="w-3.5 h-3.5" />
-                {activity.time}
+                {activity.start_time || activity.time || 'All day'}
               </span>
             </div>
           </div>
@@ -60,7 +61,7 @@ export default function ActivityCard({ activity, onToggle }) {
           <div className="text-right shrink-0">
             <span className="flex items-center text-slate-300 font-semibold bg-slate-900/50 px-2 py-1 rounded-lg">
               <IndianRupee className="w-3.5 h-3.5 text-teal-400 mr-0.5" />
-              {activity.cost > 0 ? activity.cost.toFixed(2) : 'Free'}
+              {parseFloat(activity.cost) > 0 ? parseFloat(activity.cost).toFixed(2) : 'Free'}
             </span>
           </div>
         </div>

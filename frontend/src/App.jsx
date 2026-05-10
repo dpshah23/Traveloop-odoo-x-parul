@@ -16,6 +16,7 @@ import SettingsPage from './pages/SettingsPage.jsx'
 import NotFound from './pages/NotFound.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import SignupPage from './pages/auth/SignupPage.jsx'
+import PublicItineraryPage from './pages/PublicItineraryPage.jsx'
 
 function App() {
   return (
@@ -27,7 +28,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
              <Route path="trips" element={<TripsPage />} />
              <Route path="trips/new" element={<CreateTripPage />} />
-             <Route path="trips/itinerary" element={<ItineraryPage />} />
+             <Route path="trips/:id/itinerary" element={<ItineraryPage />} />
              <Route path="itinerary" element={<ItineraryPage />} />
              <Route path="budget" element={<BudgetPage />} />
              <Route path="packing" element={<PackingPage />} />
@@ -42,6 +43,7 @@ function App() {
             <Route path="auth/signup" element={<SignupPage />} />
           </Route>
         </Route>
+        <Route path="share/:slug" element={<PublicItineraryPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster

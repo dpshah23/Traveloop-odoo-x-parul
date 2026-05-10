@@ -12,9 +12,11 @@ User = get_user_model()
 
 
 class TripStopSerializer(serializers.ModelSerializer):
+    activities = TripActivitySerializer(many=True, read_only=True)
+
     class Meta:
         model = TripStop
-        fields = ('id', 'trip', 'city', 'position', 'start_date', 'end_date', 'stop_notes', 'daily_budget')
+        fields = ('id', 'trip', 'city', 'position', 'start_date', 'end_date', 'stop_notes', 'daily_budget', 'activities')
         read_only_fields = ('id', 'trip')
 
     def validate(self, attrs):

@@ -7,6 +7,8 @@ import Switch from '../components/ui/Switch'
 import Button from '../components/ui/Button'
 import { Map, Calendar, Image as ImageIcon, IndianRupee, Loader2, Sparkles, AlertCircle } from 'lucide-react'
 import { Card } from '../components/dashboard/Card'
+import { toast } from 'react-hot-toast'
+import apiClient from '../api/client'
 
 export default function CreateTripPage() {
   const navigate = useNavigate()
@@ -47,11 +49,25 @@ export default function CreateTripPage() {
     if (!validate()) return
     
     setIsSubmitting(true)
-    // Simulate API request
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      await apiClient.post('/api/trips/', {
+        title: formData.title,
+        description: formData.description,
+        start_date: formData.startDate,
+        end_date: formData.endDate,
+        total_budget: formData.budget ? parseFloat(formData.budget) : null,
+        cover_image: formData.coverImage,
+        is_public: formData.isPublic,
+        currency: 'INR'
+      })
+      toast.success('Trip created successfully!')
       navigate('/trips')
-    }, 1500)
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to create trip. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

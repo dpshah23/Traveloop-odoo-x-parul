@@ -7,7 +7,7 @@ export default function StopCard({ stop, onUpdateStop, index }) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const totalBudget = stop.activities.reduce((sum, act) => sum + act.cost, 0)
+  const totalBudget = stop.activities.reduce((sum, act) => sum + parseFloat(act.cost || 0), 0)
 
   const handleAddActivity = (activity) => {
     onUpdateStop(stop.id, {
@@ -16,13 +16,34 @@ export default function StopCard({ stop, onUpdateStop, index }) {
     })
   }
 
-  const handleToggleActivity = (activityId) => {
+  const handleToggleActivity = async (activityId) => {
+    const activityToToggle = stop.activities.find(act => act.id === activityId)
+    if (!activityToToggle) return
+
+    // Optimistic update
     onUpdateStop(stop.id, {
       ...stop,
       activities: stop.activities.map(act => 
-        act.id === activityId ? { ...act, completed: !act.completed } : act
+        act.id === activityId ? { ...act, is_completed: !act.is_completed, completed: !act.completed } : act
       )
     })
+
+    try {
+      await import('../../api/client').then(({ default: apiClient }) => {
+        return apiClient.patch(`/api/activities/${activityId}/`, {
+          is_completed: !activityToToggle.is_completed
+        })
+      })
+    } catch (error) {
+      console.error("Failed to toggle activity status", error)
+      // Revert on failure
+      onUpdateStop(stop.id, {
+        ...stop,
+        activities: stop.activities.map(act => 
+          act.id === activityId ? { ...act, is_completed: activityToToggle.is_completed, completed: activityToToggle.completed } : act
+        )
+      })
+    }
   }
 
   return (
@@ -89,7 +110,7 @@ export default function StopCard({ stop, onUpdateStop, index }) {
               </div>
             ) : (
               // Sort by time
-              [...stop.activities].sort((a, b) => a.time.localeCompare(b.time)).map((activity) => (
+              [...stop.activities].sort((a, b) => (a.start_time || a.time || '').localeCompare(b.start_time || b.time || '')).map((activity) => (
                 <ActivityCard 
                   key={activity.id} 
                   activity={activity} 

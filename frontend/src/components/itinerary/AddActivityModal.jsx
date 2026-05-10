@@ -1,31 +1,62 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Loader2 } from 'lucide-react'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
+import apiClient from '../../api/client'
+import { toast } from 'react-hot-toast'
 
-export default function AddActivityModal({ isOpen, onClose, onAdd }) {
+export default function AddActivityModal({ isOpen, onClose, onAdd, stop }) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
-    category: 'Sightseeing',
+    category: 'SIGHTSEEING',
+    date: stop?.start_date || '',
+    time: '',
     cost: '',
-    time: ''
   })
 
   if (!isOpen) return null
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    onAdd({
-      ...formData,
-      id: Date.now().toString(),
-      cost: parseFloat(formData.cost) || 0,
-      completed: false
-    })
-    setFormData({ title: '', category: 'Sightseeing', cost: '', time: '' })
-    onClose()
+    setIsSubmitting(true)
+    try {
+      const res = await apiClient.post(`/api/stops/${stop.id}/activities/`, {
+        trip_stop: stop.id,
+        title: formData.title,
+        category: formData.category,
+        date: formData.date,
+        start_time: formData.time || null,
+        cost: parseFloat(formData.cost) || 0,
+        currency: 'INR'
+      })
+      
+      onAdd({
+        ...res.data,
+        time: res.data.start_time,
+        cost: parseFloat(res.data.cost),
+        completed: res.data.is_completed
+      })
+      
+      setFormData({ title: '', category: 'SIGHTSEEING', date: stop?.start_date || '', time: '', cost: '' })
+      onClose()
+      toast.success('Activity added!')
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to add activity. Check dates.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const categories = ['Sightseeing', 'Food', 'Transport', 'Accommodation', 'Activity']
+  const categories = [
+    { id: 'SIGHTSEEING', label: 'Sightseeing' },
+    { id: 'FOOD', label: 'Food & Dining' },
+    { id: 'TRANSPORT', label: 'Transport' },
+    { id: 'ACCOMMODATION', label: 'Accommodation' },
+    { id: 'SHOPPING', label: 'Shopping' },
+    { id: 'OTHER', label: 'Other' }
+  ]
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -51,18 +82,28 @@ export default function AddActivityModal({ isOpen, onClose, onAdd }) {
               <select 
                 value={formData.category}
                 onChange={e => setFormData(p => ({...p, category: e.target.value}))}
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-slate-100 outline-none transition focus:border-teal-300/60 focus:ring-4 focus:ring-teal-400/10 appearance-none"
+                className="w-full rounded-2xl border border-slate-700 bg-slate-950/60 px-4 py-3 text-slate-100 outline-none transition focus:border-teal-500 focus:ring-1 focus:ring-teal-500 appearance-none"
               >
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                {categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
               </select>
             </div>
           </label>
 
+          <Input 
+            label="Date" 
+            type="date" 
+            required
+            min={stop?.start_date}
+            max={stop?.end_date}
+            value={formData.date}
+            onChange={e => setFormData(p => ({...p, date: e.target.value}))}
+            className="[&::-webkit-calendar-picker-indicator]:filter-invert"
+          />
+
           <div className="grid grid-cols-2 gap-4">
             <Input 
-              label="Time" 
+              label="Time (Optional)" 
               type="time" 
-              required
               value={formData.time}
               onChange={e => setFormData(p => ({...p, time: e.target.value}))}
               className="[&::-webkit-calendar-picker-indicator]:filter-invert"
@@ -79,8 +120,10 @@ export default function AddActivityModal({ isOpen, onClose, onAdd }) {
           </div>
 
           <div className="pt-4 flex justify-end gap-3">
-            <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Add Activity</Button>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Add Activity'}
+            </Button>
           </div>
         </form>
       </div>
